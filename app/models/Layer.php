@@ -180,8 +180,8 @@ class Layer extends \app\models\Table
                 $arr = array();
                 $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
-                $primeryKey = $this->getPrimeryKey($rel);
-                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");
+                $primeryKey = $this->getPrimeryKey($rel); // TODO Slows down
+                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // TODO Slows down
                 $versioning = $resVersioning["exists"];
                 if ($row['type'] != "RASTER" && $includeExtent == true) {
                     $srsTmp = "900913";
@@ -300,10 +300,11 @@ class Layer extends \app\models\Table
                 }
 
                 // Restrictions
+                // TODO Slows down
                 $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
 
                 // References
-                if ($row["meta"] != false && $row["meta"] != "" &&
+                if (!empty($row["meta"]) &&
                     json_decode($row["meta"]) != false &&
                     isset(json_decode($row["meta"], true)["referenced_by"]) &&
                     json_decode($row["meta"], true)["referenced_by"] != false
@@ -311,6 +312,7 @@ class Layer extends \app\models\Table
                     $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
                     $arr = $this->array_push_assoc($arr, "children", $refBy);
                 } else {
+                    // TODO Slows down
                     $arr = $this->array_push_assoc($arr, "children", !empty($this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]) ? $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"] : null);
                 }
 
@@ -452,7 +454,7 @@ class Layer extends \app\models\Table
         $data = $table->makeArray($data);
         $elasticsearchArr = (array)json_decode($this->getValueFromKey($_key_, "elasticsearch"));
         foreach ($data as $value) {
-            //$safeColumn = $table->toAscii($value->column, array(), "_");
+            //$safeColumn = self::toAscii($value->column, array(), "_");
             $safeColumn = $value->column;
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
                 unset($elasticsearchArr[$value->id]);
@@ -502,7 +504,7 @@ class Layer extends \app\models\Table
         }
 
         $split = explode(".", $tableName);
-        $newName = \app\inc\Model::toAscii($data->name, array(), "_");
+        $newName = self::toAscii($data->name, array(), "_");
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
             $newName = "_" . $newName;
         }
@@ -1005,7 +1007,7 @@ class Layer extends \app\models\Table
         // Get the default "ckan_org_id" value
         $ckanOrgIdDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "ckan_org_id") {
+            if (!empty($value["name"]) == "ckan_org_id") {
                 $ckanOrgIdDefault = $value["default"];
             }
         }
@@ -1013,7 +1015,7 @@ class Layer extends \app\models\Table
         // Get the default "update" flag
         $updateDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "ckan_update") {
+            if (!empty($value["name"]) == "ckan_update") {
                 $updateDefault = $value["default"];
             }
         }
@@ -1021,7 +1023,7 @@ class Layer extends \app\models\Table
         // Get the default "update" value
         $licenseIdDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "license_id") {
+            if (!empty($value["name"]) == "license_id") {
                 $licenseIdDefault = $value["default"];
             }
         }

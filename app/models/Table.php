@@ -273,8 +273,8 @@ class Table extends Model
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $arr = [];
-            $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
-            if ($_SESSION["subuser"] == false || ($_SESSION["subuser"] == true && $_SESSION['screen_name'] == Connection::$param['postgisschema']) || ($_SESSION["subuser"] == true && $privileges->$prop != "none" && $privileges->$prop != false)) {
+            $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : !empty($_SESSION['screen_name']) ? $_SESSION['screen_name'] : null;
+            if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $_SESSION['screen_name'] == Connection::$param['postgisschema']) || (!empty($_SESSION["subuser"]) && !empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {
@@ -488,7 +488,6 @@ class Table extends Model
                     } else {
                         $gc2host = isset(App::$param["ckan"]["gc2host"]) ? App::$param["ckan"]["gc2host"] : App::$param["host"];
                         $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . $gc2host;
-                        error_log($url);
                         Util::asyncRequest($url);
                     }
                 }
@@ -888,7 +887,7 @@ class Table extends Model
         }
 
         $response = [];
-        $safeColumn = $this->toAscii($data['column'], array(), "_");
+        $safeColumn = self::toAscii($data['column'], array(), "_");
         $sql = "";
         if (is_numeric(\mb_substr($safeColumn, 0, 1, 'utf-8'))) {
             $safeColumn = "_" . $safeColumn;
@@ -1201,7 +1200,7 @@ class Table extends Model
 
         $response = [];
         $this->PDOerror = NULL;
-        $table = $this->toAscii($table, array(), "_");
+        $table = self::toAscii($table, array(), "_");
         if (is_numeric(\mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
@@ -1236,7 +1235,7 @@ class Table extends Model
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;
-        //$table = $this->toAscii($table, array(), "_");
+        //$table = self::toAscii($table, array(), "_");
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
